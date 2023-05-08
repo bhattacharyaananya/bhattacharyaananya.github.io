@@ -1,3 +1,2 @@
 # bhattacharyaananya.github.io
-
-Ananya Bhattacharya
+# ananya
