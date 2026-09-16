@@ -1,418 +1,850 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ananya Bhattacharya | Portfolio</title>
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/skins/color-red.css" />
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
-  <link rel="stylesheet" href="css/style-switcher.css" />
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="images/hacker.png" />
-  <script src ="js/hackerText.js"></script>
+  <title>Ananya Bhattacharya // Cyber Intelligence Console</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <style>
+    :root {
+      --bg-base: #030712;
+      --panel-glass: rgba(10, 16, 31, 0.75);
+      --panel-border: rgba(0, 242, 254, 0.25);
+      --primary: #00f2fe;
+      --secondary: #a855f7;
+      --alert: #00ffaa;
+      --text: #f8fafc;
+      --muted: #64748b;
+      --glow: rgba(0, 242, 254, 0.4);
+    }
+
+    /* Dynamic Threat States */
+    body.defcon-elevated {
+      --primary: #f59e0b;
+      --panel-border: rgba(245, 158, 11, 0.35);
+      --alert: #fbbf24;
+      --glow: rgba(245, 158, 11, 0.4);
+    }
+    body.defcon-critical {
+      --primary: #ff0055;
+      --panel-border: rgba(255, 0, 85, 0.4);
+      --alert: #ff0055;
+      --glow: rgba(255, 0, 85, 0.5);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+      transition: background-color 0.4s ease;
+    }
+
+    .mono {
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* Live Interactive Canvas */
+    #warRoomCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Top Live Telemetry Bar */
+    header.hud-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      z-index: 150;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sonar-ping {
+      width: 12px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--primary);
+      animation: ping 1.8s infinite;
+    }
+
+    @keyframes ping {
+      0% { transform: scale(0.9); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.4; }
+      100% { transform: scale(0.9); opacity: 1; }
+    }
+
+    .top-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 0.82rem;
+    }
+
+    .defcon-switch {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .defcon-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .defcon-btn.active {
+      background: var(--primary);
+      color: #000;
+    }
+
+    /* Layout Wrapper */
+    .viewport-shell {
+      display: flex;
+      padding-top: 60px;
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    aside.dock-nav {
+      width: 260px;
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+      left: 0;
+      background: rgba(6, 11, 24, 0.8);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 16px;
+      z-index: 120;
+    }
+
+    .dock-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dock-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .dock-link i {
+      font-size: 1.1rem;
+      color: var(--primary);
+      transition: 0.2s;
+    }
+
+    .dock-link:hover, .dock-link.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--panel-border);
+      box-shadow: inset 3px 0 0 var(--primary);
+    }
+
+    /* Main Section Container */
+    main.core-arena {
+      margin-left: 260px;
+      flex: 1;
+      padding: 40px 60px;
+      max-width: 1350px;
+    }
+
+    .arena-pane {
+      display: none;
+      animation: scanIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .arena-pane.active {
+      display: block;
+    }
+
+    @keyframes scanIn {
+      from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+
+    /* Interactive 3D HUD Cards */
+    .tactical-card {
+      background: var(--panel-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease, border-color 0.3s;
+    }
+
+    .tactical-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 15px 35px var(--glow);
+    }
+
+    /* Hero Section */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 40px;
+      align-items: center;
+      min-height: calc(100vh - 180px);
+    }
+
+    .hero-pre {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .hero-h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+
+    .glow-word {
+      color: var(--primary);
+      text-shadow: 0 0 20px var(--glow);
+    }
+
+    .hero-para {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      line-height: 1.7;
+      margin-bottom: 30px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hud-btn {
+      padding: 14px 26px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .hud-btn-primary {
+      background: var(--primary);
+      color: #030712;
+      box-shadow: 0 0 20px var(--glow);
+    }
+
+    .hud-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px var(--primary);
+    }
+
+    .hud-btn-outline {
+      background: transparent;
+      color: #fff;
+      border-color: var(--panel-border);
+    }
+
+    .hud-btn-outline:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--primary);
+    }
+
+    /* Real-Time Live Feed Terminal */
+    .soc-live-terminal {
+      background: #020612;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 20px;
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    .terminal-head {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .feed-stream {
+      flex: 1;
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .feed-item {
+      display: flex;
+      gap: 12px;
+      animation: logSlide 0.25s ease-out;
+    }
+
+    @keyframes logSlide {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .feed-time { color: var(--muted); }
+    .feed-ok { color: var(--alert); }
+    .feed-warn { color: var(--primary); }
+
+    /* Project Cards Grid */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-top: 25px;
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tech-pill {
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      color: var(--primary);
+    }
+
+    /* Operations Timeline */
+    .timeline-strip {
+      position: relative;
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .timeline-strip::before {
+      content: '';
+      position: absolute;
+      left: 18px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--panel-border);
+    }
+
+    .timeline-node {
+      position: relative;
+      padding-left: 55px;
+    }
+
+    .timeline-marker {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      width: 18px;
+      height: 18px;
+      background: var(--bg-base);
+      border: 3px solid var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    /* Comms Form */
+    .comms-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 30px;
+      margin-top: 25px;
+    }
+
+    .form-ctrl {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 14px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .form-ctrl:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--glow);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      aside.dock-nav { transform: translateX(-100%); }
+      main.core-arena { margin-left: 0; padding: 30px 20px; }
+      .hero-grid, .projects-grid, .comms-wrap { grid-template-columns: 1fr; }
+      .hero-h1 { font-size: 2.5rem; }
+    }
+  </style>
 </head>
+<body class="defcon-normal">
 
-<body class="dark">
-  <canvas id="matrixCanvas" ></canvas>
-  <!-- Matrix -->
-  <script src="/js/matrix.js"></script>
-  <!-- Main Container Start -->
-  <div class="main-container">
-    <!-- Aside Start -->
-    <div class="aside">
-      
-      <div class="nav-toggler">
-        <span></span>
+  <!-- Interactive Sonar/Particle Canvas -->
+  <canvas id="warRoomCanvas"></canvas>
+
+  <!-- Top Real-Time Status Bar -->
+  <header class="hud-topbar">
+    <div class="brand-cluster">
+      <div class="sonar-ping"></div>
+      <div class="mono" style="font-weight: 700; letter-spacing: 1px;">ANANYA // CYBER INTELLIGENCE</div>
+    </div>
+
+    <div class="top-telemetry mono">
+      <span>GRID: 28.6139° N, 77.2090° E (DELHI)</span>
+      <div class="defcon-switch">
+        <button class="defcon-btn active" data-level="normal">DEFCON 4</button>
+        <button class="defcon-btn" data-level="elevated">DEFCON 2</button>
+        <button class="defcon-btn" data-level="critical">DEFCON 1</button>
       </div>
-      <ul class="nav">
-        <li>
-          <a href="#home" class="active"><i class="fa fa-home"></i>Home</a>
-        </li>
-        <li>
-          <a href="#about"><i class="fa fa-user"></i>About</a>
-        </li>
-        <li>
-          <a href="#experience"><i class="fa fa-book"></i>Experience</a>
-        </li>
-        <li>
-          <a href="#contact"><i class="fa fa-comments"></i>Contact</a>
-        </li>
+    </div>
+  </header>
 
+  <div class="viewport-shell">
 
+    <!-- Left Navigation Dock -->
+    <aside class="dock-nav">
+      <ul class="dock-menu">
+        <li>
+          <button class="dock-link active" data-target="telemetry">
+            <i class="fa-solid fa-tower-observation"></i> <span>Live Operations</span>
+          </button>
+        </li>
+        <li>
+          <button class="dock-link" data-target="arsenal">
+            <i class="fa-solid fa-microchip"></i> <span>Arsenal & Projects</span>
+          </button>
+        </li>
+        <li>
+          <button class="dock-link" data-target="deployments">
+            <i class="fa-solid fa-shield-halved"></i> <span>Deployments</span>
+          </button>
+        </li>
+        <li>
+          <button class="dock-link" data-target="uplink">
+            <i class="fa-solid fa-satellite-dish"></i> <span>Encrypted Uplink</span>
+          </button>
+        </li>
       </ul>
-    </div>
-    <!-- Aside End -->
-    <!-- Main Content Start -->
-    <div class="main-content">
-      <!-- Home Section Start -->
-      <section class="home active section" id="home">
-        <div class="container">
-          <div class="row">
-            <div class="home-info padd-15">
-              <h3 class="hello"> 
-               <br><br> Hello, 
-              </h3>
-             
-              <h3 class="my-profession"><br>
-                I'm a <span class="typing"></span>
-              </h3>
 
+      <div class="mono" style="font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--panel-border); padding-top: 14px;">
+        CORE: POST-QUANTUM HARDENED<br>
+        KERNEL: SEC_ENG_2026
+      </div>
+    </aside>
 
+    <!-- Main Viewport Arena -->
+    <main class="core-arena">
+
+      <!-- PANE 1: TELEMETRY / HERO -->
+      <section class="arena-pane active" id="telemetry">
+        <div class="hero-grid">
+          <div>
+            <div class="hero-pre mono">
+              <i class="fa-solid fa-crosshairs"></i> Post-Quantum & Blockchain Forensics
             </div>
-            <div class="home-img padd-15">
-              <img src="images/hacker.png" alt="hero" />
+            <h1 class="hero-h1">
+              Engineered For <br>
+              <span class="glow-word" id="typeTarget">Next-Gen Defense.</span>
+            </h1>
+            <p class="hero-para">
+              Cybersecurity researcher dedicated to zero-trust quantum resilience, de-anonymizing illicit cryptocurrency peel chains, and analyzing drone SDR telemetry.
+            </p>
+            <div class="btn-row">
+              <button class="hud-btn hud-btn-primary pane-switch-btn" data-target="arsenal">
+                <i class="fa-solid fa-terminal"></i> View Research
+              </button>
+              <button class="hud-btn hud-btn-outline pane-switch-btn" data-target="uplink">
+                <i class="fa-solid fa-fingerprint"></i> Connect Uplink
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Simulated Terminal -->
+          <div class="soc-live-terminal mono">
+            <div class="terminal-head">
+              <span>REALTIME TELEMETRY FEED (AUTONOMOUS)</span>
+              <span style="color: var(--primary);">LIVE SYNC</span>
+            </div>
+            <div class="feed-stream" id="logStream">
+              <!-- Logs dynamically generated by JS -->
             </div>
           </div>
         </div>
       </section>
-      <!-- Home Section End -->
 
-      <!-- About Section Start -->
-      <section class="about section" id="about">
-        <div class="container">
-          <div class="row">
+      <!-- PANE 2: ARSENAL & PROJECTS -->
+      <section class="arena-pane" id="arsenal">
+        <div class="mono" style="color: var(--primary); font-size: 0.85rem; letter-spacing: 2px;">SUBSYSTEM // 02</div>
+        <h2 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 25px;">Featured Research & Systems</h2>
+
+        <div class="projects-grid">
+          <div class="tactical-card tilt-card">
+            <h3 style="font-size: 1.3rem; margin-bottom: 8px;">QUANPHO: Quantum Evidence Locker</h3>
+            <p style="color: var(--muted); font-size: 0.95rem; line-height: 1.6;">
+              Forensic custody system implementing hybrid post-quantum lattice algorithms (CRYSTALS-Kyber/Dilithium) to protect chain-of-custody data from "harvest now, decrypt later" attacks.
+            </p>
+            <div class="badge-bar mono">
+              <span class="tech-pill">Lattice Cryptography</span>
+              <span class="tech-pill">Forensics</span>
+              <span class="tech-pill">Zero-Trust</span>
+            </div>
           </div>
-          <div class="row">
-            <div class="about-content padd-15">
-              <div class="row">
-                <div class="about-text padd-15">
-                  <h3>I'm <span id="hacked" data-text="Ananya Bhattacharya" > Ananya Bhattacharya&nbsp;&nbsp;</span></h3>
-                 <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                          const aboutSection = document.getElementById('about');
-                          const observerOptions = {
-                            root: null, // Use the viewport as the root
-                            rootMargin: '0px',
-                            threshold: 0.1 // Trigger when 10% of the section is visible
-                          };
 
-                          const observer = new IntersectionObserver(function(entries, observer) {
-                            entries.forEach(entry => {
-                              if (entry.isIntersecting) {
-                                Init("hacked", 5,15);
-                              }
-                            });
-                          }, observerOptions);
+          <div class="tactical-card tilt-card">
+            <h3 style="font-size: 1.3rem; margin-bottom: 8px;">AeroGuard AI: C-UAS RF Triage</h3>
+            <p style="color: var(--muted); font-size: 0.95rem; line-height: 1.6;">
+              Automated counter-drone signal interception engine integrating RTL-SDR hardware to detect, track, and classify hostile frequency-hopping communication channels.
+            </p>
+            <div class="badge-bar mono">
+              <span class="tech-pill">RTL-SDR</span>
+              <span class="tech-pill">RF Telemetry</span>
+              <span class="tech-pill">C-UAS</span>
+            </div>
+          </div>
 
-                          observer.observe(aboutSection);
-                        });
-                      </script>
+          <div class="tactical-card tilt-card">
+            <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Rogue Snare: Autonomous Decoy Trap</h3>
+            <p style="color: var(--muted); font-size: 0.95rem; line-height: 1.6;">
+              Modular low-interaction honeypot architecture logging intrusion fingerprints and adversarial reconnaissance behavior directly into centralized analytics.
+            </p>
+            <div class="badge-bar mono">
+              <span class="tech-pill">Flask</span>
+              <span class="tech-pill">Docker</span>
+              <span class="tech-pill">Threat Intel</span>
+            </div>
+          </div>
 
-                  <p>
-                    Welcome to my portfolio! I'm specialized in ethical hacking methodologies. I possess extensive knowledge of penetration testing, vulnerability assessment, and security auditing. My goal is to identify and address potential vulnerabilities before malicious actors can exploit them.
-                  </p>
-                  
-                </div>
-              </div>
-              <div class="row">
-                <div class="personal-info padd-15">
-                  <div class="row">
-                    <!-- <div class="info-item padd-15">
-                      <p>Birthday : 18/10/2003<span></span></p>
-                    </div> -->
-                    <div class="info-item padd-15">
-                      <p>LinkedIn : <span><a href="https://www.linkedin.com/in/ananya-bhattacharya-ab2644208/" style="color: red;">Link</a></span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p>Degree : <span>Msc IT CyberSecurity </span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p>Github : <span><a href="https://github.com/bhattacharyaananya" style="color: red;">Link</a></span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p> Journal: <span><a href="https://bhattacharyaananya.github.io/Journal" style="color: red;"> Link</a></span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p>TryHackMe : <span><a href="https://tryhackme.com/p/ps3ud0ny4" style="color: red;">Link</a></span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p>City : <span>New Delhi</span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p>Email : <span>bhattacharya_ananya@yahoo.com</span></p>
-                    </div>
-                    <div class="info-item padd-15">
-                      <p>Phone : <span>+91 861#21$287</span></p>
-                    </div>
-                  </div>
-                  
-                </div>
-                <div class="skills padd-15">
-                  <div class="row">
-                    <div class="skills-item padd-15">
-                      <h5>Vulnerability Assessment and Pentesting</h5>
-                      <div class="progress">
-                        <div class="progress-in" style="width: 100%"></div>
-                        <div class="skill-percent">100%</div>
-                      </div>
-                    </div>
-                    <div class="skills-item padd-15">
-                      <h5>Drone Engineering</h5>
-                      <div class="progress">
-                        <div class="progress-in" style="width: 84%"></div>
-                        <div class="skill-percent">94%</div>
-                      </div>
-                    </div>
-                    <div class="skills-item padd-15">
-                      <h5>Malware Analysis</h5>
-                      <div class="progress">
-                        <div class="progress-in" style="width: 85%"></div>
-                        <div class="skill-percent">95%</div>
-                      </div>
-                    </div>
-                    <div class="skills-item padd-15">
-                      <h5>Cryptography</h5>
-                      <div class="progress">
-                        <div class="progress-in" style="width: 87%"></div>
-                        <div class="skill-percent">87%</div>
-                      </div>
-                    </div>
-                    <div class="skills-item padd-15">
-                      <h5>Dark Web & OSINT</h5>
-                      <div class="progress">
-                        <div class="progress-in" style="width: 95%"></div>
-                        <div class="skill-percent">95%</div>
-                      </div>
-                    </div>
-                    <div class="skills-item padd-15">
-                      <h5>Blockchain & Quantum Forensics</h5>
-                      <div class="progress">
-                        <div class="progress-in" style="width: 90%"></div>
-                        <div class="skill-percent">90%</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="tactical-card tilt-card">
+            <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Peel-Chain Graph De-Anonymizer</h3>
+            <p style="color: var(--muted); font-size: 0.95rem; line-height: 1.6;">
+              Graph-theoretic analytics engine tracing Bitcoin and DeFi transaction graphs, unraveling mixing operations, and identifying change addresses in financial fraud.
+            </p>
+            <div class="badge-bar mono">
+              <span class="tech-pill">Blockchain</span>
+              <span class="tech-pill">UTXO Graph</span>
+              <span class="tech-pill">DeFi Forensics</span>
             </div>
           </div>
         </div>
       </section>
-      <!-- About Section End -->
 
-      <!-- Educations & Experience Section Start -->
-      <section class="education section" id="education">
-  <div class="container">
-    <div class="row">
-      <div class="section-title padd-15">
-        <h2>Educations & Experience</h2>
-      </div>
-    </div>
-    <div class="row">
-      <div class="education padd-15">
-        <h3 class="title">Education</h3>
-        <div class="row">
-          <div class="timeline-box padd-15">
-            <div class="timeline shadow-dark">
-              <!-- Timeline item -->
-              <div class="timeline-item">
-                <div class="circle-dot"></div>
-                <h3 class="timeline-date">
-                  <i class="fa fa-calendar"></i> 2024 - 2026
-                </h3>
-                <h4 class="timeline-title">
-                 Masters IT Cybersecurity
-                </h4>
-                <h5 class="timeline-subtitle">Ganpat University</h5>
-                <p class="timeline-text">
-                  Learnt Cybersecurity and had knowledge in Computer Network Security, Cryptograpy, Information Security, Blockchain Security
-                </p>
-              </div><!-- Timeline item -->
-              <div class="timeline-item">
-                <div class="circle-dot"></div>
-                <h3 class="timeline-date">
-                  <i class="fa fa-calendar"></i> 2020 - 2023
-                </h3>
-                <h4 class="timeline-title">
-                 Bachelor of Computer Applications
-                </h4>
-                <h5 class="timeline-subtitle">Institute of Engineering & Management</h5>
-                <p class="timeline-text">
-                  Learnt the basics of computer applications and  programming languages (Python,C++,C,AI/ML) and specialised in Cybersecurity with courses (Computer Network Security, Cryptograpy, Information Security, Blockchain)
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="experience padd-15">
-        <h3 class="title">Experience</h3>
-        <div class="row">
-          <div class="timeline-box padd-15">
-            <div class="timeline shadow-dark">
-              <!-- Timeline item -->
-              <div class="timeline-item">
-                <div class="circle-dot"></div>
-                <h3 class="timeline-date">
-                  <i class="fa fa-calendar"></i> January 2026 - July 2026
-                </h3>
-                <h4 class="timeline-title">
-                  Drone Forensics Investigator, National Forensics Sciences University
-                </h4>
-                <p class="timeline-text">
-                 Built an end-to-end drone forensics solution with custom acquisition, extraction, analysis, and reporting tools, alongside a ready-to-fly drone.
-                </p></div>
-              <!-- Timeline item -->
-              <div class="timeline-item">
-                <div class="circle-dot"></div>
-                <h3 class="timeline-date">
-                  <i class="fa fa-calendar"></i> January 2026 - July 2026
-                </h3>
-                <h4 class="timeline-title">
-                  Blockchain Technology & Quantum Forensics, Defence Research and Development Organization
-                </h4>
-                <p class="timeline-text">
-                  Built a blockchain forensics platform for Bitcoin, DeFi, and smart-contract threat detection, transaction tracing, and fraud analysis.
-                </p></div>
-              <!-- Timeline item -->
-              <div class="timeline-item">
-                <div class="circle-dot"></div>
-                <h3 class="timeline-date">
-                  <i class="fa fa-calendar"></i> August 2025 - January 2026
-                </h3>
-                <h4 class="timeline-title">
-                  Security Researcher, Space Applications Centre-Indian Space Research Organisation
-                </h4>
-                <p class="timeline-text">
-                  Built a network security management platform with DNS security, web filtering, threat detection, access control, and real-time activity monitoring.
-                </p>
-              </div><!-- Timeline item -->
-              <div class="timeline-item">
-                <div class="circle-dot"></div>
-                <h3 class="timeline-date">
-                  <i class="fa fa-calendar"></i> April 2025 - September 2025
-                </h3>
-                <h4 class="timeline-title">
-                 State Cyber Cell CID Crime, Gujarat Police
-                </h4>
-                <p class="timeline-text">
-                 Built a cross-platform malware and website security platform for threat detection, phishing analysis, and forensic investigation.
-                </p>
-            </div>
-          </div>
-      </div>
-  </div>
-</section>
+      <!-- PANE 3: DEPLOYMENTS & EXPERIENCE -->
+      <section class="arena-pane" id="deployments">
+        <div class="mono" style="color: var(--primary); font-size: 0.85rem; letter-spacing: 2px;">SUBSYSTEM // 03</div>
+        <h2 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 25px;">Field Deployments & Engagements</h2>
 
-      <!-- Educations & Experience Section End -->
-
-      <!-- Contact Section Start -->
-      <section class="contact section" id="contact">
-        <div class="container">
-          <div class="row">
-            <div class="section-title padd-15">
-              <h2>Contact Me</h2>
-            </div>
-          </div>
-          <h3 class="contact-title padd-15">Do You Have Any Questions?</h3>
-          <h4 class="contact-sub-title padd-15">Use any of these to contact me !!</h4>
-          <div class="row">
-            <!-- Contact info item-->
-            <div class="contact-info-item padd-15">
-              <div class="icon"><i class="fa fa-phone"></i></div>
-              <h4>Phone No.</h4>
-              <p>+91 86#721#287</p>
-            </div>
-            <!-- Contact info item-->
-            <div class="contact-info-item padd-15">
-              <div class="icon"><i class="fa fa-map-marker-alt"></i></div>
-              <h4>Location</h4>
-              <p>New Delhi</p>
-              <p>India</p>
-            </div>
-            <!-- Contact info item-->
-            <div class="contact-info-item padd-15">
-              <div class="icon"><i class="fa fa-envelope"></i></div>
-              <h4>Email</h4>
-              <p><a href="mailto:bhattacharya_ananya@yahoo.com" style="color: red;">bhattacharya_ananya@yahoo.com</a></p>
-            </div>
-            <!-- Contact info item-->
-            <div class="contact-info-item padd-15">
-              <div class="icon"><i class="fa fa-globe-europe"></i></div>
-              <h4>LinkedIn</h4>
-              <p>
-                      <a href="https://www.linkedin.com/in/ananya-bhattacharya-ab2644208/" target="_blank" style="color: red;">/bhattacharya-ananya</a>
+        <div class="timeline-strip">
+          <div class="timeline-node">
+            <div class="timeline-marker"></div>
+            <div class="tactical-card">
+              <div class="mono" style="color: var(--primary); font-size: 0.8rem; margin-bottom: 6px;">JAN 2026 – JUL 2026</div>
+              <h3 style="font-size: 1.25rem;">Blockchain Technology & Quantum Forensics Researcher</h3>
+              <div class="mono" style="color: var(--secondary); margin-bottom: 8px;">Defence Research and Development Organisation (DRDO)</div>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 0.95rem;">
+                Built on-chain forensics modules for UTXO transaction tracing, DeFi threat detection, and quantum-resistant preservation of evidentiary data.
               </p>
             </div>
           </div>
-          <h3 class="contact-title padd-15">SEND ME AN EMAIL</h3>
-          <h4 class="contact-sub-title padd-15">
-            I'M VERY RESPONSIVE TO MESSAGES
-          </h4>
-          <!-- Contact form -->
-         <form name="contact" method="POST" data-netlify="true" onSubmit="success" data-netlify-honeypot="bot-field">
-          <input class="d-none" name="bot-field" hidden />
-  <div class="row">
-    <div class="contact-form padd-15">
-      <div class="row">
-        <div class="form-item col-6 padd-15">
-          <div class="form-group">
-            <input type="text" class="form-control" name="name" placeholder="Name" />
+
+          <div class="timeline-node">
+            <div class="timeline-marker"></div>
+            <div class="tactical-card">
+              <div class="mono" style="color: var(--primary); font-size: 0.8rem; margin-bottom: 6px;">JAN 2026 – JUL 2026</div>
+              <h3 style="font-size: 1.25rem;">Drone Forensics Investigator</h3>
+              <div class="mono" style="color: var(--secondary); margin-bottom: 8px;">National Forensic Sciences University (NFSU)</div>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 0.95rem;">
+                Constructed end-to-end drone forensic extraction pipelines, flight protocol decoding, and automated telemetry auditing solutions.
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="form-item col-6 padd-15">
-          <div class="form-group">
-            <input type="email" class="form-control" name="email" placeholder="Email" />
+
+          <div class="timeline-node">
+            <div class="timeline-marker"></div>
+            <div class="tactical-card">
+              <div class="mono" style="color: var(--primary); font-size: 0.8rem; margin-bottom: 6px;">AUG 2025 – JAN 2026</div>
+              <h3 style="font-size: 1.25rem;">Security Researcher</h3>
+              <div class="mono" style="color: var(--secondary); margin-bottom: 8px;">Space Applications Centre – ISRO</div>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 0.95rem;">
+                Architected DNS security pipelines, custom perimeter filtering, real-time telemetry inspection, and access-control modules for high-integrity defense.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="form-item col-12 padd-15">
-          <div class="form-group">
-            <input type="text" class="form-control" name="subject" placeholder="Subject" />
+
+          <div class="timeline-node">
+            <div class="timeline-marker"></div>
+            <div class="tactical-card">
+              <div class="mono" style="color: var(--primary); font-size: 0.8rem; margin-bottom: 6px;">APR 2025 – SEP 2025</div>
+              <h3 style="font-size: 1.25rem;">Cyber Crime Analyst</h3>
+              <div class="mono" style="color: var(--secondary); margin-bottom: 8px;">State Cyber Cell CID Crime, Gujarat Police</div>
+              <p style="color: var(--muted); line-height: 1.6; font-size: 0.95rem;">
+                Engineered triage systems to investigate illicit domains, dismantle phishing networks, and triage multi-stage malware payloads.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="form-item col-12 padd-15">
-          <div class="form-group">
-            <textarea class="form-control" name="message" placeholder="Message"></textarea>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="form-item col-12 padd-15">
-          <div class="form-group">
-            <button type="submit" class="btn">Send Message</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</form>
         </div>
       </section>
-      
-            
-          </h4>
-          <!-- Contact form -->
-         
+
+      <!-- PANE 4: UPLINK / CONTACT -->
+      <section class="arena-pane" id="uplink">
+        <div class="mono" style="color: var(--primary); font-size: 0.85rem; letter-spacing: 2px;">SUBSYSTEM // 04</div>
+        <h2 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 25px;">Encrypted Communications Uplink</h2>
+
+        <div class="comms-wrap">
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div class="tactical-card">
+              <div class="mono" style="font-size: 0.75rem; color: var(--muted);">PRIMARY DISPATCH</div>
+              <div class="mono" style="font-size: 1.1rem; color: var(--primary); margin-top: 4px;">bhattacharya_ananya@yahoo.com</div>
+            </div>
+
+            <div class="tactical-card">
+              <div class="mono" style="font-size: 0.75rem; color: var(--muted);">PROFESSIONAL IDENTITY</div>
+              <div class="mono" style="margin-top: 4px;">
+                <a href="https://www.linkedin.com/in/ananya-bhattacharya-ab2644208/" target="_blank" style="color: var(--text); text-decoration: none;">
+                  linkedin.com/in/ananya-bhattacharya-ab2644208/
+                </a>
+              </div>
+            </div>
+
+            <div class="tactical-card">
+              <div class="mono" style="font-size: 0.75rem; color: var(--muted);">REPOSITORY</div>
+              <div class="mono" style="margin-top: 4px;">
+                <a href="https://github.com/bhattacharyaananya" target="_blank" style="color: var(--primary); text-decoration: none;">
+                  github.com/bhattacharyaananya
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <form name="secure-contact" method="POST" data-netlify="true">
+              <input type="text" class="form-ctrl mono" name="handle" placeholder="Callsign or Name" required />
+              <input type="email" class="form-ctrl mono" name="email" placeholder="Verification Email" required />
+              <textarea class="form-ctrl mono" name="payload" rows="5" placeholder="Operational brief or message..." required></textarea>
+              <button type="submit" class="hud-btn hud-btn-primary" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-lock"></i> Dispatch Transmission
+              </button>
+            </form>
+          </div>
         </div>
       </section>
-    
-        
-       
-    </div>
-    <!-- Icon -->
 
-    
-    <!-- Main Content End -->
-    
+    </main>
   </div>
-  <!-- Main Container End -->
-  <!-- Custom JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"
-    referrerpolicy="no-referrer"></script>
-  <script src="js/script.js"></script>
-   
-  
 
+  <script>
+    // 1. Defcon Threat Level Switcher
+    const defconBtns = document.querySelectorAll('.defcon-btn');
+    defconBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        defconBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.body.className = `defcon-${btn.dataset.level}`;
+      });
+    });
+
+    // 2. Tab Navigation
+    const navLinks = document.querySelectorAll('.dock-link, .pane-switch-btn');
+    const panes = document.querySelectorAll('.arena-pane');
+
+    function switchPane(targetId) {
+      panes.forEach(pane => pane.classList.toggle('active', pane.id === targetId));
+      document.querySelectorAll('.dock-link').forEach(link => {
+        link.classList.toggle('active', link.dataset.target === targetId);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = link.dataset.target;
+        if (target) switchPane(target);
+      });
+    });
+
+    // 3. Simulated Live SOC Telemetry Stream
+    const logContainer = document.getElementById('logStream');
+    const mockLogs = [
+      { text: "KYBER-1024 encapsulation key validated", type: "ok" },
+      { text: "Peel Chain hop trace: 14 hops de-anonymized", type: "warn" },
+      { text: "Drone RF spectrum scan: FHSS channel locked", type: "ok" },
+      { text: "Suricata network rule: Anomaly blocked", type: "warn" },
+      { text: "Chain of custody sealed via SHA-3", type: "ok" }
+    ];
+
+    function pushLog() {
+      const now = new Date().toTimeString().split(' ')[0];
+      const randomLog = mockLogs[Math.floor(Math.random() * mockLogs.length)];
+      const row = document.createElement('div');
+      row.className = 'feed-item';
+      row.innerHTML = `<span class="feed-time">[${now}]</span> <span class="${randomLog.type === 'ok' ? 'feed-ok' : 'feed-warn'}">${randomLog.text}</span>`;
+      logContainer.prepend(row);
+      if (logContainer.children.length > 8) {
+        logContainer.removeChild(logContainer.lastChild);
+      }
+    }
+    for(let i=0; i<4; i++) pushLog();
+    setInterval(pushLog, 3200);
+
+    // 4. Interactive Click-to-Ping Background Canvas
+    const canvas = document.getElementById('warRoomCanvas');
+    const ctx = canvas.getContext('2d');
+    let w = canvas.width = window.innerWidth;
+    let h = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+
+    let pings = [];
+    window.addEventListener('click', (e) => {
+      pings.push({ x: e.clientX, y: e.clientY, r: 0, alpha: 1 });
+    });
+
+    const dots = Array.from({ length: 40 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5
+    }));
+
+    function renderCanvas() {
+      ctx.clearRect(0, 0, w, h);
+
+      // Render Sonar Pulses
+      for (let i = pings.length - 1; i >= 0; i--) {
+        const ping = pings[i];
+        ping.r += 3;
+        ping.alpha -= 0.015;
+        if (ping.alpha <= 0) {
+          pings.splice(i, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(ping.x, ping.y, ping.r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 242, 254, ${ping.alpha})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Draw Grid Nodes
+      dots.forEach(d => {
+        d.x += d.vx;
+        d.y += d.vy;
+        if (d.x < 0 || d.x > w) d.vx *= -1;
+        if (d.y < 0 || d.y > h) d.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 242, 254, 0.3)';
+        ctx.fill();
+      });
+
+      requestAnimationFrame(renderCanvas);
+    }
+    renderCanvas();
+
+    // 5. 3D Tilt Effect on Cards
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        card.style.transform = `perspective(1000px) rotateX(${-y / 15}deg) rotateY(${x / 15}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+      });
+    });
+  </script>
 </body>
-
 </html>
